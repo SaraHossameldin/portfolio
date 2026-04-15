@@ -2,6 +2,8 @@
 window.addEventListener('load', () => {
     // Basic blocking alert to greet the user
     alert("Welcome to my interactive portfolio!");
+    //to integrate the API 
+    getGithubRepos();
 });
 
 
@@ -122,30 +124,66 @@ if (contactForm) {
     });
 }
 
+/**
+ *This is the part I added for assignment 3 (API integration) 
+ */
+
 async function getGithubRepos() {
-    const container = document.getElementById('projects-content');
-    // Display Loading State [cite: 48]
-    container.innerHTML = '<p>Loading my GitHub projects...</p>';
+    const container= document.getElementById('projects-content');
+    
+    //Handling Loading State
+    container.innerHTML= '<p style="padding: 20px; text-align: center; width: 100%;">Loading my latest GitHub projects...</p>';
 
+    //to actually show the projects 
     try {
-        const response = await fetch('https://api.github.com/users/YOUR_USERNAME/repos');
+        const username= "SaraHossameldin";  
+        const response= await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
         
-        // Handle Errors [cite: 49]
-        if (!response.ok) throw new Error("Failed to fetch repositories");
+        //Handling Errors
+        if (!response.ok) {
+            throw new Error(`Failed to fetch repositories (Status: ${response.status})`);
+        }
 
-        const repos = await response.json();
+        const repos= await response.json();
 
-        // Update the DOM dynamically [cite: 50]
-        container.innerHTML = ''; 
+        //to dynamically update the DOM
+        container.innerHTML= ''; 
+
+       //if there are no repos 
+        if (repos.length=== 0) {
+            container.innerHTML= '<p>No public repositories found.</p>';
+            return;
+        }
+
+        //otherwise, 
         repos.forEach(repo => {
-            container.innerHTML += `
+            
+            //if the repo is empty, I won't display it 
+	    if (repo.size==0) return; 
+
+	    //I skipped the repo for this project 
+            if (repo.name.toLowerCase()=== 'portfolio') return;
+
+            //To get the name of teh project 
+            let displayName= repo.name;
+            //To dislay the project info and to add it to the list. 
+
+            const projectItem= `
                 <div class="p-item">
                     <div class="p-info">
-                        <h4>${repo.name}</h4> <p>${repo.description || 'No description'}</p> <p><small>${repo.language} | ⭐ ${repo.stargazers_count}</small></p> </div>
-                </div>`;
+                        <h4>${displayName}</h4>
+                        <p>${repo.description || 'Professional project repository.'}</p>
+                        <p><small>${repo.language || 'Multi-language'} | ⭐ ${repo.stargazers_count}</small></p>
+                    </div>
+                    <a href="${repo.html_url}" target="_blank" class="highlight" style="font-size: 0.7rem;">View Source</a>
+                </div>
+            `;
+            container.innerHTML+= projectItem;
         });
+
     } catch (error) {
-        container.innerHTML = `<p>Error loading projects: ${error.message}</p>`; [cite: 49]
+        //To handling Error Display
+        console.error("API Error:", error);
+        container.innerHTML = `<p style="color: #ff4d4d; padding: 20px;">Error: ${error.message}. Please check your internet connection or username.</p>`;
     }
 }
-getGithubRepos();
