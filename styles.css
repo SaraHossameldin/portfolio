@@ -392,6 +392,7 @@ body {
     }
 
     .nav-links {
+        overflow-x: auto; white-space: nowrap;
         display: none;
     }
 }
