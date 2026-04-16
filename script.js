@@ -36,6 +36,7 @@ const setupToggle = (buttonId, contentId) => {
 setupToggle('toggle-projects-btn', 'projects-content');
 setupToggle('toggle-certs-btn', 'certs-content');
 setupToggle('toggle-skills-btn', 'skills-content');
+setupToggle('toggle-github-btn', 'github-section');
 
 
 //Add skills option 
@@ -47,9 +48,21 @@ const skillsList= document.getElementById('skills-list');
 //function to add a new skill 
 const addNewSkill = () => {
     // .trim() removes extra whitespaces
-    const val = skillInput.value.trim();
+    const val= skillInput.value.trim();
 
     if (val) {
+       //I will first check if that skill already exists or not 
+        const existingSkills= skillsList.querySelectorAll('span');
+        const isDuplicate = Array.from(existingSkills).some(span => 
+            span.textContent.toLowerCase() === val.toLowerCase()
+        );
+
+        if (isDuplicate) {
+            alert("This skill is already in your list!");
+            skillInput.value = "";
+            return; // Stop the function here
+        }
+
         //we create a new span element in memory
         const span= document.createElement('span');
         
@@ -81,8 +94,8 @@ if (addSkillBtn && skillInput) {
 
 
 //Form Option 
-const contactForm = document.getElementById('contact-form');
-const feedback = document.getElementById('form-feedback');
+const contactForm= document.getElementById('contact-form');
+const feedback= document.getElementById('form-feedback');
 
 //if the form is there 
 if (contactForm) {
@@ -96,16 +109,16 @@ if (contactForm) {
        //checkValidity() checks if all required fields match their type and required attributes 
         if (!contactForm.checkValidity()) {
             //visual feedback for the user
-            feedback.textContent = "Required information is missing or invalid.";
-            feedback.style.color = "red";
+            feedback.textContent= "Required information is missing or invalid.";
+            feedback.style.color= "red";
         } else {
             //If successful, we retrieve the values and simulate submission
-            const nameInput = document.getElementById('name');
-            const userName = nameInput ? nameInput.value.trim() : "Guest";
+            const nameInput= document.getElementById('name');
+            const userName= nameInput ? nameInput.value.trim() : "Guest";
             
             //Success message 
-            feedback.textContent = `Message sent successfully! Thank you, ${userName}.`;
-            feedback.style.color = "green";
+            feedback.textContent= `Message sent successfully! Thank you, ${userName}.`;
+            feedback.style.color= "green";
             
             //To reset 
             contactForm.classList.remove('submitted');
@@ -113,7 +126,7 @@ if (contactForm) {
 
             //timer to lear success message after 5 seconds
             setTimeout(() => {
-                feedback.textContent = "";
+                feedback.textContent= "";
             }, 5000);
         }
     });
@@ -124,66 +137,54 @@ if (contactForm) {
     });
 }
 
-/**
- *This is the part I added for assignment 3 (API integration) 
- */
-
 async function getGithubRepos() {
-    const container= document.getElementById('projects-content');
-    
-    //Handling Loading State
+    //I will write to the new container 
+    const container = document.getElementById('github-projects-content');
+    if (!container) return;
+
+    //Loading State
     container.innerHTML= '<p style="padding: 20px; text-align: center; width: 100%;">Loading my latest GitHub projects...</p>';
 
-    //to actually show the projects 
+   //connect to my Github 
     try {
         const username= "SaraHossameldin";  
-        const response= await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
+        const response= await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=15`);
         
-        //Handling Errors
         if (!response.ok) {
             throw new Error(`Failed to fetch repositories (Status: ${response.status})`);
         }
 
         const repos= await response.json();
 
-        //to dynamically update the DOM
+        //Clear the loading message
         container.innerHTML= ''; 
 
-       //if there are no repos 
-        if (repos.length=== 0) {
-            container.innerHTML= '<p>No public repositories found.</p>';
+        if (repos.length === 0) {
+            container.innerHTML = '<p>No public repositories found.</p>';
             return;
         }
 
-        //otherwise, 
         repos.forEach(repo => {
-            
-            //if the repo is empty, I won't display it 
-	    if (repo.size==0) return; 
-
-	    //I skipped the repo for this project 
+            //I will skip empty repos and the repo to this website 
+            if (repo.size=== 0) return; 
             if (repo.name.toLowerCase()=== 'portfolio') return;
 
-            //To get the name of teh project 
-            let displayName= repo.name;
-            //To dislay the project info and to add it to the list. 
-
-            const projectItem= `
+            // now the API data
+            const projectItem = `
                 <div class="p-item">
                     <div class="p-info">
-                        <h4>${displayName}</h4>
+                        <h4>${repo.name}</h4>
                         <p>${repo.description || 'Professional project repository.'}</p>
                         <p><small>${repo.language || 'Multi-language'} | ⭐ ${repo.stargazers_count}</small></p>
                     </div>
                     <a href="${repo.html_url}" target="_blank" class="highlight" style="font-size: 0.7rem;">View Source</a>
                 </div>
             `;
-            container.innerHTML+= projectItem;
+            container.innerHTML += projectItem;
         });
 
     } catch (error) {
-        //To handling Error Display
         console.error("API Error:", error);
-        container.innerHTML = `<p style="color: #ff4d4d; padding: 20px;">Error: ${error.message}. Please check your internet connection or username.</p>`;
+        container.innerHTML = `<p style="color: #ff4d4d; padding: 20px;">Error: ${error.message}</p>`;
     }
 }
